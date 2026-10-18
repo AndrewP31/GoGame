@@ -14,14 +14,19 @@ const (
 )
 
 type Game struct {
-	playerX, playerY int //player coordinates
+	playerX, playerY int
 	floorImg         *ebiten.Image
 	playerImg        *ebiten.Image
+	tiles            [][]TileType
+	wallImg          *ebiten.Image
 }
 
 func NewGame() *Game {
 	floor := ebiten.NewImage(tileSize-1, tileSize-1)
 	floor.Fill(color.RGBA{60, 60, 70, 255})
+
+	wall := ebiten.NewImage(tileSize-1, tileSize-1)
+	wall.Fill(color.RGBA{0, 0, 0, 0})
 
 	player := ebiten.NewImage(tileSize-8, tileSize-8)
 	player.Fill(color.RGBA{200, 200, 60, 255})
@@ -31,6 +36,8 @@ func NewGame() *Game {
 		playerY:   gridH / 2,
 		floorImg:  floor,
 		playerImg: player,
+		wallImg:   wall,
+		tiles:     NewMap(),
 	}
 
 }
@@ -60,17 +67,24 @@ func (g *Game) Update() error {
 	return nil
 }
 
+// edges and walls have collision
 func (g *Game) isInBounds(x, y int) bool {
-	return x >= 0 && x < gridW && y >= 0 && y < gridH
+	return x >= 0 && x < gridW && y >= 0 && y < gridH && g.tiles[y][x] != Wall
 }
+
 func (g *Game) Draw(screen *ebiten.Image) {
 
-	//floor
+	//floor or wall
 	for y := 0; y < gridH; y++ {
 		for x := 0; x < gridW; x++ {
+			img := g.floorImg
+			if g.tiles[y][x] == Wall {
+				img = g.wallImg
+			}
+
 			options := &ebiten.DrawImageOptions{}
 			options.GeoM.Translate(float64(x*tileSize), float64(y*tileSize))
-			screen.DrawImage(g.floorImg, options)
+			screen.DrawImage(img, options)
 		}
 	}
 
